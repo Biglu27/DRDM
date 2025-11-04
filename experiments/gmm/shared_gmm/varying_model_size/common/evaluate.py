@@ -22,7 +22,6 @@ from diffusionlab.distributions.empirical import EmpiricalDistribution
 from diffusion_mem_gen.loss.loss_approximations import (
     iso_hom_gmm_gen_vf_excess_train_loss_compared_to_mem_vf_approx_factory,
     iso_hom_gmm_pmem_vf_excess_train_loss_compared_to_mem_vf_approx_factory,
-    iso_hom_gmm_pmem_vf_excess_train_loss_compared_to_mem_vf_instancewise_approx_factory,
 )
 from diffusion_mem_gen import constants
 from diffusion_mem_gen.utils.factories import inject_diffusion_process_to_vf, compute_loss_factory
@@ -88,6 +87,7 @@ def evaluate_baseline_vector_fields(baseline_config_file: Path, data_file: Path,
     gt_var = data['gt_var']
     gt_priors = data['gt_priors']
     ts = data['ts']
+    anisotropic_ou = data.get('anisotropic_ou')
 
     # Setup parameters from config
     key = config['eval_key']
@@ -221,6 +221,10 @@ def evaluate_baseline_vector_fields(baseline_config_file: Path, data_file: Path,
             metrics_dict["train_loss"][t_idx]["partial_mem_approx"] = metrics_dict["train_loss"][t_idx]["memorizing"]
 
     # Save results
+    if anisotropic_ou is not None:
+        metrics_dict['anisotropic_ou'] = anisotropic_ou
+        metrics_dict['anisotropic_capacity_fraction'] = anisotropic_ou['capacity_fraction']
+
     results = metrics_dict
 
     output_file = output_dir_path / f"baseline_results_{num_components}.pkl"
