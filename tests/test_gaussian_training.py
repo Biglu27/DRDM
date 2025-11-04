@@ -100,9 +100,8 @@ def test_gaussian_training():
         val_metrics={"val/loss_fixed_t": loss_fixed_t_metric},
         batchfree_metrics={"memorization": memorization_metric},
         num_epochs_train=num_epochs,
-        num_epochs_per_metrics_log=1, # Log less frequently in a real scenario
-        wandb_logger=None, # No logging for this test
-        use_tqdm=True # Keep tqdm enabled for the test run
+        num_epochs_per_metrics_log=1,  # Log less frequently in a real scenario
+        use_tqdm=True,  # Keep tqdm enabled for the test run
     )
 
     # 8. Run Training
@@ -125,4 +124,4 @@ def test_gaussian_training():
 
 # If run directly, execute the test
 if __name__ == "__main__":
-    test_gaussian_training() 
+    test_gaussian_training()

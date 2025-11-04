@@ -101,6 +101,7 @@ def train_model(
     gt_color_means = data["gt_color_means"]
     gt_color_var = data["gt_color_var"]
     ts = data["ts"]
+    anisotropic_ou = data.get("anisotropic_ou")
 
     # Setup parameters from config
     key = training_config["train_key"]
@@ -325,6 +326,10 @@ def train_model(
         metrics_dict["val_loss"][t_idx]["trained"] = val_loss
 
     # Save results
+    if anisotropic_ou is not None:
+        metrics_dict["anisotropic_ou"] = anisotropic_ou
+        metrics_dict["anisotropic_capacity_fraction"] = anisotropic_ou["capacity_fraction"]
+
     results = metrics_dict
 
     output_file = output_dir / f"model_results_{num_templates}.pkl"

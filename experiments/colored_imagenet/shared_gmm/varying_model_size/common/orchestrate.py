@@ -10,6 +10,7 @@ from typing import Dict, List, Any, Tuple, Optional, Set
 
 
 import jax
+import numpy as np
 from jax import numpy as jnp
 from tqdm import tqdm
 
@@ -17,6 +18,12 @@ from diffusionlab.dynamics import VariancePreservingProcess
 from diffusionlab.schedulers import UniformScheduler
 from diffusion_mem_gen.distributions.colored_signal_template_data import ColoredSignalTemplateDistribution
 from diffusion_mem_gen.distributions.templates.fashion_mnist import generate_fashion_mnist_templates
+from diffusion_mem_gen.utils.ou_process import (
+    build_anisotropic_ou_generators,
+    capacity_crossover_fraction,
+    gamma_operator,
+    sigma_sto,
+)
 from diffusion_mem_gen.utils.scheduler import GPUJobScheduler
 
 def generate_base_config(base_config: Dict[str, Any], output_dir: Path) -> Path:
@@ -77,6 +84,25 @@ def generate_data(base_config_file: Path, output_dir: Path) -> Path:
     scheduler = UniformScheduler()
     ts = scheduler.get_ts(t_min=t_min, t_max=t_max, num_steps=num_times - 1)
     
+    # Compute anisotropic OU statistics for downstream analysis
+    template_dim = int(jnp.prod(jnp.array(gt_templates.shape[1:])))
+    dim = gt_color_dim * template_dim
+    U, Q, A = build_anisotropic_ou_generators(dim)
+    sigma_star = gt_color_var * jnp.eye(dim)
+    sigma_sto_ts = sigma_sto(ts, U, Q)
+    gamma_ts = gamma_operator(ts, sigma_star, U, Q)
+    lambda_weights = jnp.ones_like(ts)
+    capacity_fraction = capacity_crossover_fraction(ts, lambda_weights, sigma_star, U, Q)
+
+    anisotropic_ou = {
+        "U": np.asarray(U),
+        "Q": np.asarray(Q),
+        "A": np.asarray(A),
+        "sigma_sto": np.asarray(sigma_sto_ts),
+        "gamma": np.asarray(gamma_ts),
+        "capacity_fraction": float(capacity_fraction),
+    }
+
     # Save data to disk
     data = {
         'X_train': X_train,
@@ -87,6 +113,7 @@ def generate_data(base_config_file: Path, output_dir: Path) -> Path:
         "gt_color_means": gt_color_means,
         "gt_color_var": gt_color_var,
         'ts': ts,
+        'anisotropic_ou': anisotropic_ou,
     }
     
     data_file = output_dir / "data.pkl"

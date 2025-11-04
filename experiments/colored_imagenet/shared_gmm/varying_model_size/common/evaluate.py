@@ -83,6 +83,7 @@ def evaluate_baseline_vector_fields(
     gt_color_means = data["gt_color_means"]
     gt_color_var = data["gt_color_var"]
     ts = data["ts"]
+    anisotropic_ou = data.get("anisotropic_ou")
 
     # Setup parameters from config
     key = config["eval_key"]
@@ -195,6 +196,10 @@ def evaluate_baseline_vector_fields(
 
 
     # Save results
+    if anisotropic_ou is not None:
+        metrics_dict["anisotropic_ou"] = anisotropic_ou
+        metrics_dict["anisotropic_capacity_fraction"] = anisotropic_ou["capacity_fraction"]
+
     results = metrics_dict
 
     output_file = output_dir_path / f"baseline_results_{num_templates}.pkl"
